@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Game Tangkap Bola</title>
+<style>
+    body {
+        margin: 0;
+        overflow: hidden;
+        background: #111;
+        font-family: Arial;
+        color: white;
+        text-align: center;
+    }
+
+    canvas {
+        background: #222;
+        display: block;
+        margin: auto;
+    }
+
+    #score {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        font-size: 20px;
+    }
+</style>
+</head>
+<body>
+
+<div id="score">Score: 0</div>
+<canvas id="gameCanvas"></canvas>
+
+<script>
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Player (kotak bawah)
+let player = {
+    x: canvas.width / 2 - 50,
+    y: canvas.height - 40,
+    width: 100,
+    height: 20,
+    speed: 7
+};
+
+// Bola jatuh
+let balls = [];
+let score = 0;
+
+// Kontrol
+let left = false;
+let right = false;
+
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowLeft") left = true;
+    if (e.key === "ArrowRight") right = true;
+});
+
+document.addEventListener("keyup", e => {
+    if (e.key === "ArrowLeft") left = false;
+    if (e.key === "ArrowRight") right = false;
+});
+
+// Spawn bola
+function spawnBall() {
+    balls.push({
+        x: Math.random() * canvas.width,
+        y: 0,
+        size: 15,
+        speed: 3 + Math.random() * 3
+    });
+}
+
+// Update game
+function update() {
+    // Gerak player
+    if (left) player.x -= player.speed;
+    if (right) player.x += player.speed;
+
+    // Batas layar
+    if (player.x < 0) player.x = 0;
+    if (player.x + player.width > canvas.width)
+        player.x = canvas.width - player.width;
+
+    // Update bola
+    balls.forEach((ball, index) => {
+        ball.y += ball.speed;
+
+        // Cek tabrakan
+        if (
+            ball.y + ball.size > player.y &&
+            ball.x > player.x &&
+            ball.x < player.x + player.width
+        ) {
+            balls.splice(index, 1);
+            score++;
+        }
+
+        // Bola jatuh
+        if (ball.y > canvas.height) {
+            balls.splice(index, 1);
+        }
+    });
+
+    // Spawn bola tiap waktu
+    if (Math.random() < 0.02) spawnBall();
+}
+
+// Gambar
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Player
+    ctx.fillStyle = "lime";
+    ctx.fillRect(player.x, player.y, player.width, player.height);
+
+    // Bola
+    ctx.fillStyle = "red";
+    balls.forEach(ball => {
+        ctx.beginPath();
+        ctx.arc(ball.x, ball.y, ball.size, 0, Math.PI * 2);
+        ctx.fill();
+    });
+
+    document.getElementById("score").innerText = "Score: " + score;
+}
+
+// Loop game
+function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+
+</body>
+</html>
